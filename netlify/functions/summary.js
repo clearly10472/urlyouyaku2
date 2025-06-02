@@ -61,8 +61,8 @@ async function generateSummary(text) {
 ${text}
 --------`;
     
-    // Gemini APIのURLを設定（v1betaを使用）
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // Gemini APIのURLを設定（v1を使用）
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
     
     // リクエストボディを作成
     const requestBody = {
