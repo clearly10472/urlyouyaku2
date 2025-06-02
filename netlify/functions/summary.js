@@ -55,39 +55,60 @@ async function generateSummary(text) {
   }
   
   try {
-    // Initialize the Generative AI API
-    const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1beta" });
-    
-    // gemini-proモデルを取得
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-pro',
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 100,
-      },
-    });
-    
     // プロンプトを作成
     const prompt = `次の内容を日本語で120字以内で1行要約してください。
 --------
 ${text}
 --------`;
     
+    // Gemini APIのURLを設定（v1betaを使用）
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    
+    // リクエストボディを作成
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 100
+      }
+    };
+    
     // リクエストのタイムアウト設定（20秒）
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
     
-    // コンテンツを生成
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    }, { signal: controller.signal });
+    // APIリクエストを送信
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    });
     
     // タイムアウトをクリア
     clearTimeout(timeoutId);
     
-    // レスポンスを取得
-    const response = result.response;
-    const summary = response.text();
+    // レスポンスが正常でない場合はエラーをスロー
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`API error: ${errorData.error?.message || response.statusText}`);
+    }
+    
+    // レスポンスをJSONとして解析
+    const data = await response.json();
+    
+    // 要約を抽出
+    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!summary) {
       throw new Error('Gemini API returned an empty response');
