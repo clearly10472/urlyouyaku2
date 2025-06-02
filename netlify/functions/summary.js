@@ -55,8 +55,8 @@ async function generateSummary(text) {
   }
   
   try {
-    // Generative AI APIを初期化
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // Initialize the Generative AI API
+    const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1beta" });
     
     // gemini-proモデルを取得
     const model = genAI.getGenerativeModel({
