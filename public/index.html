@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL One-Line Summary</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="url"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+      margin: 0 auto;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      border-left: 4px solid #3498db;
+    }
+    .error {
+      color: #e74c3c;
+      border-left-color: #e74c3c;
+    }
+    .loading {
+      text-align: center;
+      margin-top: 20px;
+      display: none;
+    }
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid #3498db;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>URL One-Line Summary</h1>
+    <div class="form-group">
+      <label for="url-input">URLを入力してください：</label>
+      <input type="url" id="url-input" placeholder="https://example.com" required>
+    </div>
+    <button id="submit-btn">要約する</button>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>要約中です。しばらくお待ちください...</p>
+    </div>
+    
+    <div class="result" id="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlInput = document.getElementById('url-input');
+      const submitBtn = document.getElementById('submit-btn');
+      const loading = document.getElementById('loading');
+      const result = document.getElementById('result');
+
+      submitBtn.addEventListener('click', async () => {
+        const url = urlInput.value.trim();
+        
+        if (!url) {
+          showError('URLを入力してください');
+          return;
+        }
+        
+        try {
+          // URLの形式を検証
+          new URL(url);
+          
+          // 読み込み中の表示
+          loading.style.display = 'block';
+          result.style.display = 'none';
+          submitBtn.disabled = true;
+          
+          try {
+            // APIを呼び出す
+            const response = await fetch(`/.netlify/functions/summary?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.error || 'エラーが発生しました');
+            }
+            
+            // 結果を表示
+            result.textContent = data.summary;
+            result.classList.remove('error');
+            result.style.display = 'block';
+          } catch (error) {
+            showError(`エラー: ${error.message}`);
+          } finally {
+            // 読み込み中の表示を非表示
+            loading.style.display = 'none';
+            submitBtn.disabled = false;
+          }
+        } catch (error) {
+          showError('有効なURLを入力してください');
+        }
+      });
+      
+      function showError(message) {
+        result.textContent = message;
+        result.classList.add('error');
+        result.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

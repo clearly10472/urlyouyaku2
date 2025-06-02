@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "A service that provides one-line Japanese summaries of web pages",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js",
+    "dev": "netlify dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
